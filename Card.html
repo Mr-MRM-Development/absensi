@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>ID Card dengan QR</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f0f0f0; text-align:center; }
+  .form-container { margin: 20px auto; padding: 15px; background: #fff; border-radius: 8px; width: 300px; }
+  .id-card {
+    margin: 20px auto;
+    width: 250px; height: 450px;
+    border: 2px solid #333; border-radius: 10px;
+    background: linear-gradient(45deg, #02f, #adf, #46d); padding: 15px; text-align: center;
+    box-shadow: 0px 4px 6px rgba(0,0,0,0.2);
+    position: relative;
+  }
+  .id-card img.photo {
+    width: 150px; height: 150px; object-fit: cover;
+    border-radius: 50%; margin-bottom: 10px; border: 2px solid #333;
+  }
+  .id-card h2 { margin: 0; font-size: 20px;}
+  .qrcode { margin-top: 10px; background: #fff; padding: 12px; border-radius:5px; border: solid 2px #000;}
+  button { margin-top: 15px; padding: 8px 15px; border:none; border-radius:5px; background:#007bff; color:white; cursor:pointer; }
+  button:hover { background:#0056b3; }
+</style>
+</head>
+<body>
+
+<div class="form-container">
+  <h3>Buat ID Card</h3>
+  <form id="form">
+    <label>Nama:</label><br>
+    <input type="text" id="name" required><br><br>
+    <label>Email:</label><br>
+    <input type="email" id="email" required><br><br>
+    <label>Upload Foto:</label><br>
+    <input type="file" id="photo" accept="image/*" required><br><br>
+    <button type="submit">Generate</button>
+  </form>
+</div>
+
+<div id="card-container"></div>
+<button id="downloadBtn" style="display:none;">Download ID Card</button>
+
+<!-- Library QRCode -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<!-- Library html2canvas untuk download -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+document.getElementById("form").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const photoInput = document.getElementById("photo");
+
+  if (photoInput.files && photoInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const imgData = event.target.result;
+
+      // Generate kartu
+      document.getElementById("card-container").innerHTML = `
+        <div class="id-card" id="idCard">
+    		     <h1 style="color: #f66; margin: 3px; padding: 0;">ID Card</h1>
+          <img class="photo" src="${imgData}" alt="Foto">
+          <h2><pre>${name}</pre></h2>
+          <div class="qrcode" id="qrcode"></div>
+        </div>
+      `;
+
+      // QR dari Nama + Email
+      new QRCode(document.getElementById("qrcode"), {
+        text: "Nama: " + name + "\\nEmail: " + email,
+        width: 200,
+        height: 200
+      });
+
+      document.getElementById("downloadBtn").style.display = "inline-block";
+    };
+    reader.readAsDataURL(photoInput.files[0]);
+  }
+});
+
+// Download sebagai PNG
+document.getElementById("downloadBtn").addEventListener("click", function() {
+  const card = document.getElementById("idCard");
+  html2canvas(card).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "IDCard.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
+});
+</script>
+
+</body>
+</html>
